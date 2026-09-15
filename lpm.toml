@@ -1,0 +1,45 @@
+schema_version = 1
+
+[project]
+package = "lilygo-ui-i2cdetector"
+version = "0.1.0"
+app_id = "cc.lilygo.ui.I2cDetector"
+title = "I2C Detector"
+summary = "Scan Linux I2C buses and inspect detected 7-bit addresses"
+description = "Asynchronously scans available Linux I2C buses and highlights detected devices in a 7-bit address map."
+license = "MIT"
+source_repo = "https://github.com/LILYGO-UI/lilygo-ui-i2cdetector"
+homepage = "https://github.com/LILYGO-UI/lilygo-ui-i2cdetector"
+categories = ["Development"]
+
+[[project.authors]]
+name = "lbuque"
+email = "110239031@qq.com"
+
+[project.assets]
+icon = "assets/app-icon.png"
+
+[[project.assets.screenshots]]
+path = "assets/previews/preview1.png"
+caption = "Detected devices highlighted in the 7-bit I2C address map"
+
+[[project.permissions]]
+id = "i2c"
+reason = "Discover I2C adapters and probe connected 7-bit devices."
+
+[project.compatibility]
+architectures = ["arm64"]
+min_appkit_version = "0.1.0"
+
+[project.launcher]
+order = 90
+
+[build]
+host_preset = "host-simulator"
+cross_preset = "cm0-cross"
+package_dir = "dist"
+
+[deploy]
+host = "raspberrypi.local"
+user = "pi"
+port = 22

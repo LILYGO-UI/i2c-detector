@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"
+     viewBox="0 0 512 512" role="img" aria-labelledby="icon-title icon-description">
+  <title id="icon-title">I2C Detector</title>
+  <desc id="icon-description">An emerald chip with an address matrix and a magnifying glass highlighting a detected device. The chip pins represent the I2C hardware interface.</desc>
+  <defs>
+    <linearGradient id="tile-fill" x1="80" y1="0" x2="432" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F2F2F7"/>
+    </linearGradient>
+    <linearGradient id="chip-fill" x1="136" y1="112" x2="344" y2="360" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#20956F"/>
+      <stop offset="0.6" stop-color="#167C5A"/>
+      <stop offset="1" stop-color="#0F684B"/>
+    </linearGradient>
+    <linearGradient id="lens-fill" x1="290" y1="274" x2="374" y2="390" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E5F3EC"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded launcher tile; the four outer corners remain transparent. -->
+  <rect id="tile" width="512" height="512" rx="112" fill="url(#tile-fill)"/>
+
+  <!-- Broad pins retain the hardware silhouette at launcher sizes. -->
+  <g id="chip-pins" fill="none" stroke="#0F684B" stroke-width="20" stroke-linecap="round">
+    <path id="top-pins" d="M156 80V112 M212 80V112 M268 80V112 M324 80V112"/>
+    <path id="left-pins" d="M80 156H112 M80 212H112 M80 268H112 M80 324H112"/>
+    <path id="right-pins" d="M360 156H392 M360 212H392 M360 268H392 M360 324H392"/>
+    <path id="bottom-pins" d="M156 360V392 M212 360V392 M268 360V392 M324 360V392"/>
+  </g>
+
+  <g id="chip">
+    <rect x="112" y="120" width="248" height="248" rx="48" fill="#0F684B" opacity="0.12"/>
+    <rect x="112" y="112" width="248" height="248" rx="48" fill="url(#chip-fill)"/>
+    <rect x="115" y="115" width="242" height="242" rx="45" fill="none" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="2"/>
+  </g>
+
+  <!-- A symbolic address map, simplified to remain legible at 32 px. -->
+  <g id="address-matrix" fill="#FFFFFF">
+    <rect x="156" y="156" width="36" height="36" rx="9" opacity="0.30"/>
+    <rect x="216" y="156" width="36" height="36" rx="9" opacity="0.30"/>
+    <rect x="276" y="156" width="36" height="36" rx="9" opacity="0.92"/>
+    <rect x="156" y="216" width="36" height="36" rx="9" opacity="0.30"/>
+    <rect x="216" y="216" width="36" height="36" rx="9" opacity="0.92"/>
+    <rect x="276" y="216" width="36" height="36" rx="9" opacity="0.30"/>
+    <rect x="156" y="276" width="36" height="36" rx="9" opacity="0.30"/>
+    <rect x="216" y="276" width="36" height="36" rx="9" opacity="0.30"/>
+    <rect x="276" y="276" width="36" height="36" rx="9" opacity="0.30"/>
+  </g>
+
+  <g id="detector">
+    <!-- Pale separation keeps the lens clear where it crosses the chip. -->
+    <path d="M381 381L424 424" fill="none" stroke="#F2F2F7" stroke-width="52" stroke-linecap="round"/>
+    <circle cx="332" cy="332" r="82" fill="#F2F2F7"/>
+    <path id="lens-handle" d="M380 380L424 424" fill="none" stroke="#20262D" stroke-width="36" stroke-linecap="round"/>
+    <circle id="lens" cx="332" cy="332" r="64" fill="url(#lens-fill)" stroke="#20262D" stroke-width="16"/>
+    <rect id="detected-address" x="307" y="307" width="50" height="50" rx="12" fill="#167C5A"/>
+    <path id="detected-check" d="M319 332L328 341L346 322" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
