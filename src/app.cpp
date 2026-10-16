@@ -18,7 +18,7 @@ void app_open(const cm0_app_context_t *context)
 {
     app_state.view_model = std::make_unique<I2cDetectorViewModel>();
     app_state.view       = std::make_unique<I2cDetectorView>(*app_state.view_model);
-    app_state.view->create(context->root, LILYGO_UI_I2CDETECTOR_APP_NAME);
+    app_state.view->create(context->root);
 }
 
 void app_close()

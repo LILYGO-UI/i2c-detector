@@ -12,7 +12,7 @@ class I2cDetectorView {
 public:
     explicit I2cDetectorView(I2cDetectorViewModel &view_model) noexcept;
 
-    lv_obj_t *create(lv_obj_t *parent, const char *application_name);
+    lv_obj_t *create(lv_obj_t *parent);
     void destroy() noexcept;
 
 private:

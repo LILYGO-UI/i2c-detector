@@ -103,6 +103,34 @@ if(BUILD_TESTING AND NOT CMAKE_CROSSCOMPILING)
             ${_width} ${_height}
             ${CMAKE_CURRENT_BINARY_DIR}/i2cdetector-${viewport}.ppm)
     endforeach()
+
+    if(CM0_SIMULATOR)
+        add_executable(i2cdetector-keyboard-navigation-tests
+            tests/test_keyboard_navigation.cpp)
+        target_compile_options(i2cdetector-keyboard-navigation-tests PRIVATE
+            -Wall -Wextra -Wpedantic -UNDEBUG)
+        target_link_libraries(i2cdetector-keyboard-navigation-tests PRIVATE
+            lilygo_ui_i2cdetector_ui)
+        foreach(viewport IN ITEMS landscape compact)
+            if(viewport STREQUAL "landscape")
+                set(_width 1232)
+            else()
+                set(_width 320)
+            endif()
+            foreach(scan_result IN ITEMS success no-buses error)
+                set(_keyboard_test i2cdetector-keyboard-${viewport})
+                if(NOT scan_result STREQUAL "success")
+                    string(APPEND _keyboard_test "-${scan_result}")
+                endif()
+                add_test(NAME ${_keyboard_test}
+                    COMMAND i2cdetector-keyboard-navigation-tests
+                        --width ${_width} --height 568)
+                set_tests_properties(${_keyboard_test} PROPERTIES
+                    ENVIRONMENT "SDL_VIDEODRIVER=dummy;SDL_RENDER_DRIVER=software;I2C_TEST_SCAN_RESULT=${scan_result}"
+                    TIMEOUT 15)
+            endforeach()
+        endforeach()
+    endif()
 endif()
 
 # New applications have no legacy CM0 package to replace. Add Debian migration

@@ -20,32 +20,6 @@ lv_obj_t *create_page(lv_obj_t *parent)
     return page;
 }
 
-lv_obj_t *create_header(lv_obj_t *parent, const char *title_text)
-{
-    auto *header = lv_obj_create(parent);
-    lv_obj_set_name_static(header, "app_header");
-    lv_obj_set_width(header, LV_PCT(100));
-    lv_obj_set_height(header, 88);
-    lv_obj_set_style_border_width(header, 0, 0);
-    lv_obj_set_style_border_side(header, LV_BORDER_SIDE_BOTTOM, 0);
-    lv_obj_set_style_border_color(header, lv_color_hex(color_border), 0);
-    lv_obj_set_style_border_width(header, 1, 0);
-    lv_obj_set_style_radius(header, 0, 0);
-    lv_obj_set_style_bg_color(header, lv_color_hex(color_container_background), 0);
-    lv_obj_set_style_bg_opa(header, LV_OPA_COVER, 0);
-    lv_obj_set_style_pad_hor(header, 28, 0);
-    lv_obj_set_style_pad_ver(header, 18, 0);
-    lv_obj_clear_flag(header, LV_OBJ_FLAG_SCROLLABLE);
-
-    auto *title = lv_label_create(header);
-    lv_obj_set_name_static(title, "app_title");
-    lv_label_set_text(title, title_text);
-    lv_obj_set_style_text_font(title, lilygo_ui_font_get(36), 0);
-    lv_obj_set_style_text_color(title, lv_color_hex(color_container_title), 0);
-    lv_obj_align(title, LV_ALIGN_LEFT_MID, 0, 0);
-    return header;
-}
-
 lv_obj_t *create_card(lv_obj_t *parent)
 {
     auto *card = lv_obj_create(parent);

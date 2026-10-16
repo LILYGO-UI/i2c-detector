@@ -117,14 +117,12 @@ int main(int argc, char **argv)
 
     I2cDetectorViewModel view_model(std::make_unique<FixtureScanner>());
     I2cDetectorView view(view_model);
-    view.create(lv_screen_active(), "I2C Detector");
+    view.create(lv_screen_active());
     lv_tick_inc(120);
     lv_timer_handler();
     lv_obj_update_layout(lv_screen_active());
 
     auto *surface    = lv_obj_find_by_name(lv_screen_active(), "app_surface");
-    auto *header     = lv_obj_find_by_name(lv_screen_active(), "app_header");
-    auto *title      = lv_obj_find_by_name(lv_screen_active(), "app_title");
     auto *controls   = lv_obj_find_by_name(lv_screen_active(), "i2c_controls");
     auto *selector   = lv_obj_find_by_name(lv_screen_active(), "i2c_bus_selector");
     auto *scan       = lv_obj_find_by_name(lv_screen_active(), "i2c_scan");
@@ -135,12 +133,10 @@ int main(int argc, char **argv)
     auto *address_3c = lv_obj_find_by_name(lv_screen_active(), "i2c_address_3c");
     auto *address_68 = lv_obj_find_by_name(lv_screen_active(), "i2c_address_68");
     auto *address_7f = lv_obj_find_by_name(lv_screen_active(), "i2c_address_7f");
-    assert(surface && header && title && controls && selector && scan && status && panel && summary);
+    assert(surface && controls && selector && scan && status && panel && summary);
     assert(address_20 && address_3c && address_68 && address_7f);
     assert(
         lv_color_eq(lv_obj_get_style_bg_color(surface, LV_PART_MAIN), lv_color_hex(components::color_page_background)));
-    assert(lv_color_eq(lv_obj_get_style_bg_color(header, LV_PART_MAIN),
-                       lv_color_hex(components::color_container_background)));
     assert(lv_color_eq(lv_obj_get_style_bg_color(panel, LV_PART_MAIN),
                        lv_color_hex(components::color_container_background)));
     assert(std::string(lv_label_get_text(status)) == "3 devices found on 2 buses");
@@ -167,6 +163,12 @@ int main(int argc, char **argv)
                                           [](const auto &pixel) { return colors_differ(pixel, framebuffer[0]); });
     assert(has_contrast);
     assert(write_ppm(argv[3], width, height));
+
+    lv_dropdown_open(selector);
+    lv_refr_now(display);
+    const auto dropdown_path = std::string(argv[3]) + ".dropdown.ppm";
+    assert(write_ppm(dropdown_path.c_str(), width, height));
+    lv_dropdown_close(selector);
 
     view.destroy();
     lv_display_delete(display);

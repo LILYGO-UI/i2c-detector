@@ -16,10 +16,9 @@
 
 | 区域 | 当前内容与行为 |
 | --- | --- |
-| 顶部标题栏 | 显示应用名称 `I2C Detector`，高度为 88 px，位于滚动主体之外。 |
-| 控制卡片 | 总线下拉框、`Scan` 按钮和全局扫描状态；下拉框与按钮高度均为 56 px。 |
-| 地址卡片 | 当前总线路径、该总线的设备数量或错误、绿色 `Detected` 图例，以及 7 位地址矩阵。 |
-| 页面主体 | 两张卡片按列排列并居中；内容超出高度时纵向滚动。 |
+| 控制卡片 | 总线下拉框、`Scan` 按钮和全局扫描状态；下拉框与按钮高度均为 56 px，展开选项使用 22 px 字体。 |
+| 地址卡片 | 当前总线路径、该总线的设备数量在左侧，绿色 `Detected` 图例靠右对齐，下方显示 7 位地址矩阵；窄屏或较长错误文字按需换行，图例仍靠右。 |
+| 页面主体 | 占满页面高度，无应用标题栏；两张卡片按列排列并居中，内容超出高度时纵向滚动。 |
 
 扫描过程中按钮显示 `Scanning` 并禁用，完成后恢复 `Scan`。初次尚无总线或扫描未发现
 总线时，下拉框显示 `No I2C buses` 并禁用；非扫描状态下，扫描按钮仍可再次触发扫描。有旧结果时，
@@ -48,10 +47,18 @@
 | 白色背景、黑色文字 | 地址属于本应用的探测范围 `03`–`77`，当前没有检测高亮。 |
 | 浅灰背景、灰色文字 | `00`–`02`、`78`–`7F`，属于本应用跳过的地址。 |
 
-地址单元格用于显示结果，没有点击、寄存器读写或设备详情操作。绿色高亮表示探测成功，
+地址单元格支持键盘聚焦：在 `Scan` 按钮上按 `↓` 可进入地址表，随后用上下左右键
+浏览相邻地址；页面和矩阵会自动滚动，使焦点地址完整可见。总线下拉框保留原生方向键
+选择行为，可用 Tab 移到 `Scan`。Tab / Shift+Tab 也可在控件和地址之间切换。
+单元格使用标准 LVGL 按钮加入 AppKit 默认输入组，不注册额外方向键处理；点击或按 Enter
+只聚焦地址，不发起扫描、寄存器读写或设备详情操作。绿色高亮表示探测成功，
 或内核报告该地址已被驱动占用；不包含芯片型号识别，也不区分这两种情况。
 白色单元格在扫描未完成、总线不可用或设备未响应时都可能
 出现，不能仅凭颜色判断设备是否不存在；应同时查看状态与总线摘要。
+
+首次扫描禁用顶部控件时，焦点移到第一个可用地址 `00`，不会回绕到 `7F` 而把页面带到
+底部。页面创建时将所属输入组的 refocus 策略设为 `NEXT`；扫描结果刷新不重置用户的
+焦点或滚动位置。
 
 ## 架构边界与更新流程
 
@@ -63,7 +70,7 @@
 | `src/pages/i2c_detector/i2c_scanner.*` | 扫描接口及系统实现；后台处理设备访问，向 ViewModel 交付报告。 |
 | `src/pages/i2c_detector/i2c_detector_view_model.*` | 用户命令、展示文案、扫描结果接收，通过 `revision_subject()` 发布变化。 |
 | `src/pages/i2c_detector/i2c_detector_view.*` | LVGL 对象、布局、事件转发、状态展示和定时轮询；不得直接修改 Model。 |
-| `src/components/components.*` | 页面、标题栏、卡片、按钮及语义颜色。 |
+| `src/components/components.*` | 页面、卡片、按钮及语义颜色。 |
 | `src/components/lv_subject.hpp` | 不可复制、不可移动的 `IntSubject` RAII 封装。 |
 | `src/app.cpp` | 在 AppKit 提供的根容器下创建页面，管理 View 与 ViewModel 的创建和销毁顺序。 |
 
@@ -101,7 +108,7 @@ Subject；这些工作应在 LVGL 线程接收结果后完成。
 | 颜色角色 | 常量 | 色值 |
 | --- | --- | --- |
 | 页面背景、下拉框背景 | `color_page_background` | `#F2F2F7` |
-| 标题栏、卡片、未高亮探测地址背景 | `color_container_background` | `#FFFFFF` |
+| 卡片、未高亮探测地址背景 | `color_container_background` | `#FFFFFF` |
 | 标题 | `color_container_title` | `#1A1A1A` |
 | 正文、地址文字 | `color_text` | `#000000` |
 | 边框、分隔线 | `color_border` | `#D8DDE3` |
@@ -121,12 +128,11 @@ Subject；这些工作应在 LVGL 线程接收结果后完成。
 ## 字体与文本
 
 显示文本的 UI 源文件必须包含 `<cm0/typography.h>`，并在 `lv_init()` 后通过
-`lilygo_ui_font_get(size)` 获取 AppKit 字体。当前页面使用固定的四档字号：
+`lilygo_ui_font_get(size)` 获取 AppKit 字体。当前页面使用固定的三档字号：
 
 | 字号 | 当前用途 |
 | --- | --- |
-| 36 px | 应用标题 |
-| 22 px | 总线下拉框、扫描按钮、地址卡片标题 |
+| 22 px | 总线下拉框及展开选项、扫描按钮、地址卡片标题 |
 | 18 px | 全局扫描状态 |
 | 14 px | 总线摘要、图例、地址单元格 |
 
@@ -182,10 +188,11 @@ AppKit 字体按 SIL Open Font License 1.1 分发，不得描述为“无版权�
 
 | 对象名称 | 对应对象 |
 | --- | --- |
-| `app_surface`、`app_header`、`app_title` | 页面根容器、标题栏、标题文字 |
+| `app_surface` | 页面根容器 |
 | `i2c_body`、`i2c_controls` | 纵向滚动主体、控制卡片 |
 | `i2c_bus_selector`、`i2c_scan`、`i2c_status` | 总线下拉框、扫描按钮、全局状态 |
 | `i2c_address_panel`、`i2c_bus_title`、`i2c_bus_summary` | 地址卡片及总线标题、摘要 |
+| `i2c_bus_details` | 总线路径、设备数量或错误、检测图例的横向容器 |
 | `i2c_detected_swatch` | 绿色图例色块 |
 | `i2c_address_scroller`、`i2c_address_matrix` | 矩阵横向滚动容器、矩阵主体 |
 | `i2c_address_00`–`i2c_address_7f` | 地址单元格，名称使用两位小写十六进制，例如 `i2c_address_3c`；显示文字为 `3C`。 |
@@ -220,16 +227,26 @@ ctest --preset host-simulator
 | `i2cdetector-view-model` | 使用 FakeScanner 检查启动与重复启动、结果轮询、总线切换、展示文案和 revision Subject 数值更新。 |
 | `i2cdetector-render-portrait` | 在 `568 x 1232` 下执行下述渲染检查和交互。 |
 | `i2cdetector-render-landscape` | 在 `1232 x 568` 下执行相同检查和交互。 |
+| `i2cdetector-keyboard-landscape`、`i2cdetector-keyboard-compact` | 在 `1232 x 568` 和 `320 x 568` 下通过真实 AppKit 运行时输入链验证方向键浏览、自动滚动及 Tab 切换。 |
+| 上述键盘测试的 `-no-buses`、`-error` 变体 | 验证首次扫描未发现总线或失败时的启动位置和键盘浏览。 |
 
 [`tests/render_ui.cpp`](../tests/render_ui.cpp) 注入固定扫描报告：`/dev/i2c-1` 有 `20`，
 `/dev/i2c-4` 有 `3C` 和 `68`。测试检查关键对象存在、页面与卡片背景色、汇总文字、
 总线选项、选中总线的地址高亮，以及 `7F` 的灰色背景；再发送总线切换事件，检查摘要
-和高亮更新，并通过扫描按钮事件检查禁用与恢复。最后确认画面不是单一颜色并写出 PPM。
+和高亮更新，并通过扫描按钮事件检查禁用与恢复。最后确认画面不是单一颜色并写出 PPM，
+另以 `.dropdown.ppm` 后缀输出展开下拉列表的画面。
 
 主机预设下产物为 `build/host-simulator/i2cdetector-portrait.ppm` 和
 `build/host-simulator/i2cdetector-landscape.ppm`。这些检查没有进行像素基准比较，也没有
 自动验证控件几何位置、触摸命中、字体缺字、滚动范围或运行中的尺寸切换。两种测试均
 使用固定报告，不访问真实 I2C 设备；无总线、错误和慢扫描的界面效果仍需补充检查。
+
+[`tests/test_keyboard_navigation.cpp`](../tests/test_keyboard_navigation.cpp) 在 SDL 模拟器中
+向 AppKit 创建的键盘注入按下与松开，检查从 `Scan` 向下进入地址表、逐行到达末行、
+左右浏览到 `70` 和 `7F`，以及焦点地址位于纵向和横向可见范围内；同时检查 Enter
+不会触发扫描、Tab / Shift+Tab 切换和向上返回控制区。首次结果延迟交付，让 AppKit
+多次处理禁用控件和焦点滚动，检查扫描等待及完成后页面仍在顶部，并验证浏览地址后
+报告刷新不会抢走焦点或重置滚动。这些测试不访问真实硬件。
 
 UI 验收应检查两张渲染图，并在模拟器或设备上验证：
 

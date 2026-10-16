@@ -23,11 +23,10 @@ I2cDetectorView::I2cDetectorView(I2cDetectorViewModel &view_model) noexcept : vi
 {
 }
 
-lv_obj_t *I2cDetectorView::create(lv_obj_t *parent, const char *application_name)
+lv_obj_t *I2cDetectorView::create(lv_obj_t *parent)
 {
     surface_ = components::create_page(parent);
     lv_obj_add_event_cb(surface_, size_changed_event, LV_EVENT_SIZE_CHANGED, this);
-    components::create_header(surface_, application_name);
 
     body_ = lv_obj_create(surface_);
     lv_obj_set_name_static(body_, "i2c_body");
@@ -65,6 +64,12 @@ lv_obj_t *I2cDetectorView::create(lv_obj_t *parent, const char *application_name
     lv_obj_set_style_bg_color(bus_dropdown_, lv_color_hex(components::color_page_background), 0);
     lv_obj_set_style_text_color(bus_dropdown_, lv_color_hex(components::color_text), 0);
     lv_obj_set_style_text_font(bus_dropdown_, lilygo_ui_font_get(22), 0);
+    if (const auto *font = lilygo_ui_font_get(22)) {
+        auto *options = lv_dropdown_get_list(bus_dropdown_);
+        lv_obj_set_style_text_font(options, font, 0);
+        lv_obj_set_style_text_line_space(options, 16, 0);
+        lv_obj_set_style_text_line_space(options, 16, LV_PART_SELECTED);
+    }
     lv_obj_add_event_cb(bus_dropdown_, bus_changed_event, LV_EVENT_VALUE_CHANGED, this);
 
     scan_button_ = components::create_button(toolbar_, LV_SYMBOL_REFRESH "  Scan", scan_event, this);
@@ -86,25 +91,37 @@ lv_obj_t *I2cDetectorView::create(lv_obj_t *parent, const char *application_name
     lv_obj_set_style_pad_row(matrix_panel_, 8, 0);
     lv_obj_set_flex_flow(matrix_panel_, LV_FLEX_FLOW_COLUMN);
 
-    bus_title_label_ = lv_label_create(matrix_panel_);
+    auto *bus_details = lv_obj_create(matrix_panel_);
+    lv_obj_set_name_static(bus_details, "i2c_bus_details");
+    make_unframed(bus_details);
+    lv_obj_set_size(bus_details, LV_PCT(100), LV_SIZE_CONTENT);
+    lv_obj_set_style_pad_column(bus_details, 12, 0);
+    lv_obj_set_style_pad_row(bus_details, 8, 0);
+    lv_obj_set_flex_flow(bus_details, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(bus_details, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
+    lv_obj_clear_flag(bus_details, LV_OBJ_FLAG_SCROLLABLE);
+
+    bus_title_label_ = lv_label_create(bus_details);
     lv_obj_set_name_static(bus_title_label_, "i2c_bus_title");
-    lv_obj_set_width(bus_title_label_, LV_PCT(100));
+    lv_obj_set_style_max_width(bus_title_label_, LV_PCT(100), 0);
     lv_obj_set_style_text_font(bus_title_label_, lilygo_ui_font_get(22), 0);
     lv_obj_set_style_text_color(bus_title_label_, lv_color_hex(components::color_container_title), 0);
 
-    bus_summary_label_ = lv_label_create(matrix_panel_);
+    bus_summary_label_ = lv_label_create(bus_details);
     lv_obj_set_name_static(bus_summary_label_, "i2c_bus_summary");
-    lv_obj_set_width(bus_summary_label_, LV_PCT(100));
+    lv_obj_set_style_max_width(bus_summary_label_, LV_PCT(100), 0);
     lv_label_set_long_mode(bus_summary_label_, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_font(bus_summary_label_, lilygo_ui_font_get(14), 0);
     lv_obj_set_style_text_color(bus_summary_label_, lv_color_hex(components::color_muted_text), 0);
 
-    auto *legend = lv_obj_create(matrix_panel_);
+    auto *legend = lv_obj_create(bus_details);
     make_unframed(legend);
-    lv_obj_set_size(legend, LV_PCT(100), 24);
+    lv_obj_set_size(legend, LV_SIZE_CONTENT, 24);
+    lv_obj_set_style_min_width(legend, 88, 0);
+    lv_obj_set_flex_grow(legend, 1);
     lv_obj_set_style_pad_column(legend, 8, 0);
     lv_obj_set_flex_flow(legend, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(legend, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_align(legend, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(legend, LV_OBJ_FLAG_SCROLLABLE);
 
     auto *swatch = lv_obj_create(legend);
@@ -137,6 +154,13 @@ lv_obj_t *I2cDetectorView::create(lv_obj_t *parent, const char *application_name
     lv_obj_set_flex_flow(matrix_, LV_FLEX_FLOW_COLUMN);
     lv_obj_clear_flag(matrix_, LV_OBJ_FLAG_SCROLLABLE);
     create_address_matrix();
+
+    // The initial scan disables both toolbar controls. When AppKit removes
+    // them from the focus group, advance to 00 instead of wrapping back to 7F
+    // and scrolling to the bottom before the user has pressed a key.
+    if (auto *group = lv_obj_get_group(bus_dropdown_)) {
+        lv_group_set_refocus_policy(group, LV_GROUP_REFOCUS_POLICY_NEXT);
+    }
 
     poll_timer_ = lv_timer_create(poll_timer_event, 100, this);
     lv_subject_add_observer_obj(view_model_.revision_subject(), revision_changed_event, surface_, this);
@@ -207,8 +231,11 @@ void I2cDetectorView::create_address_matrix()
 
         for (std::size_t column = 0; column < 16; ++column) {
             const std::size_t address = row * 16 + column;
-            auto *cell                = lv_obj_create(row_object);
+            // Standard group widgets let AppKit navigate the address grid and
+            // scroll each focused cell into view in both directions.
+            auto *cell                = lv_button_create(row_object);
             address_cells_[address]   = cell;
+            lv_obj_remove_style_all(cell);
             lv_obj_set_size(cell, 0, 40);
             lv_obj_set_flex_grow(cell, 1);
             lv_obj_set_style_radius(cell, 4, 0);

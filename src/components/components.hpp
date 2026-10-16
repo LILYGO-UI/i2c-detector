@@ -22,7 +22,6 @@ inline constexpr std::uint32_t color_scanning             = 0xa45a00;
 inline constexpr std::uint32_t color_error                = 0xb42318;
 
 lv_obj_t *create_page(lv_obj_t *parent);
-lv_obj_t *create_header(lv_obj_t *parent, const char *title);
 lv_obj_t *create_card(lv_obj_t *parent);
 lv_obj_t *create_button(lv_obj_t *parent, const char *text, lv_event_cb_t callback, void *user_data);
 
