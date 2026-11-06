@@ -2,7 +2,7 @@ schema_version = 1
 
 [project]
 package = "lilygo-ui-i2cdetector"
-version = "0.1.1"
+version = "0.1.2"
 app_id = "cc.lilygo.ui.I2cDetector"
 title = "I2C Detector"
 summary = "Scan Linux I2C buses and inspect detected 7-bit addresses"
